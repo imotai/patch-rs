@@ -94,6 +94,12 @@ fn multiple_patches(input: Input<'_>) -> IResult<Input<'_>, Vec<Patch>> {
     many1(patch)(input)
 }
 
+pub fn parse_hunks(s: &str) -> Result<Vec<Hunk>, ParseError<'_>> {
+    let input = Input::new(s);
+    let (_, hunks) = chunks(input)?;
+    Ok(hunks)
+}
+
 fn patch(input: Input<'_>) -> IResult<Input<'_>, Patch> {
     let (input, files) = headers(input)?;
     let (input, hunks) = chunks(input)?;
@@ -464,6 +470,24 @@ mod tests {
 
         test_parser!(range("2") -> Range { start: 2, count: 1 });
         Ok(())
+    }
+
+    #[test]
+    fn test_parse_hunks() {
+        let patch = r#"@@ -10,8 +10,8 @@ license = "MIT"
+ edition = "2018"
+ 
+ [dependencies]
+-nom = "4.0"
+-nom_locate = "0.3"
++nom = "5.0"
++nom_locate = "1.0.0"
+ chrono = "0.4"
+ 
+ [dev-dependencies]"#;
+        let hunks = parse_hunks(patch).unwrap();
+        println!("{:?}", hunks);
+        assert_eq!(hunks.len(), 1);
     }
 
     #[test]
